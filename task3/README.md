@@ -48,8 +48,18 @@ content type: text/html; charset=utf-8
 first 16 bytes: <!doctype html>
 ```
 
+The important failure is not a Java exception or a failed network request. It
+is the mismatch between the expected and observed behaviour:
+
+| Check | Result |
+| --- | --- |
+| Expected | Reject the response because it is not a valid PDF. |
+| Observed | The prototype reports `successful HTTP response: yes`. |
+| Test result | **FAIL - invalid PDF content was not rejected.** |
+
 This demonstrates that a successful HTTP response and a filename extension do
-not prove that the response body is a valid PDF.
+not prove that the response body is a valid PDF. The Task 1 prototype prints
+enough metadata to expose the problem, but it does not perform this validation.
 
 ## Verification
 

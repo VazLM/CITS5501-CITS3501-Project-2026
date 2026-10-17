@@ -55,7 +55,11 @@ in which a PDF link returns HTML. Its index page links to
 The download endpoint deliberately returns HTTP `200` and
 `Content-Type: text/html`, with an HTML body. Running the scraper against this
 server shows `successful HTTP response: yes`, even though the response is not a
-PDF. The content type and initial bytes provide evidence of the mismatch.
+PDF. The content type and initial bytes provide evidence of the mismatch. This
+is a failed content-validation test: the expected behaviour is to reject the
+response as an invalid PDF, while the observed prototype only reports that the
+HTTP request succeeded. No Java exception is expected because the fake server
+deliberately returns a well-formed HTTP response.
 
 This scenario is undesirable to reproduce on the live site because the team
 does not control that server and should not replace a real policy document with
