@@ -1,6 +1,6 @@
 # Task 3 - Fixtures and test doubles
 
-## Fixtures as a source of truth
+## 3.1 Fixtures as a source of truth
 
 Repeatable scraper tests should use small, version-controlled fixtures whose
 expected results are known in advance. Useful fixtures include a normal HTML
@@ -11,7 +11,7 @@ be recorded with each fixture. A local HTTP server can then serve the same
 bytes and headers on every test run, so a result does not depend on changes to
 the live website or the network.
 
-## Observations about request limits
+## 3.2 Observations about request limits
 
 We made one request to the supplied policy index with `curl`, asking it to
 discard the response body and display the response headers:
@@ -30,7 +30,7 @@ Even when a small probe succeeds, the full test suite should run against local
 fixtures and test doubles. This avoids unnecessary traffic, makes tests fast
 and repeatable, and allows failure conditions to be created safely.
 
-## Test doubles in Java
+## 3.3 Test doubles in Java
 
 Java test doubles can simulate responses that are difficult to obtain reliably
 from the live site. The JDK's `com.sun.net.httpserver.HttpServer` is sufficient
@@ -47,7 +47,7 @@ failures can be tested by connecting to an unused local port. Slow responses
 can be produced by sending a response body in small chunks with a delay between
 them.
 
-## Demonstrated failure scenario
+## 3.4 Demonstrated failure scenario
 
 The included `task3/BadPdfServer.java` is a test double for the Task 2 scenario
 in which a PDF link returns HTML. Its index page links to
@@ -59,7 +59,9 @@ PDF. The content type and initial bytes provide evidence of the mismatch. This
 is a failed content-validation test: the expected behaviour is to reject the
 response as an invalid PDF, while the observed prototype only reports that the
 HTTP request succeeded. No Java exception is expected because the fake server
-deliberately returns a well-formed HTTP response.
+deliberately returns a well-formed HTTP response. The companion
+`task3/BadPdfScenarioCheck.java` checks the status, content type and `%PDF-`
+signature and prints `RESULT: FAILURE REPRODUCED`, making the outcome explicit.
 
 This scenario is undesirable to reproduce on the live site because the team
 does not control that server and should not replace a real policy document with
