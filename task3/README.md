@@ -50,3 +50,9 @@ first 16 bytes: <!doctype html>
 
 This demonstrates that a successful HTTP response and a filename extension do
 not prove that the response body is a valid PDF.
+
+## Verification
+
+The artifact was compiled and run with Eclipse Temurin JDK 17.0.20.1. The
+existing Java scraper was then run against the local server and produced the
+evidence shown above.
