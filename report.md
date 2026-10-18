@@ -13,11 +13,11 @@
 
 ## Task 1 – Prototype
 
-### What it does
+### 1.1 What it does
 
 `Scraper.java` fetches the course's policy index page, extracts every `<a href>` link on it using jsoup, and keeps only the links that (a) resolve to the same host as the index page and (b) end in one of a fixed set of document extensions (`.pdf`, `.doc`, `.docx`, `.xls`, `.xlsx`, `.ppt`, `.pptx`, `.odt`, `.ods`, `.odp`, `.rtf`). After deduplicating, it attempts to download the first five distinct matches and prints, for each: HTTP status, whether that status counts as success, content type, downloaded size, and the first 16 bytes of the body. A single client enforces a hard cap of 20 requests for the whole run, a 10-second timeout per request, a 1-second delay between requests, and a custom `User-Agent` identifying it as a student project.
 
-### Limitations
+### 1.2 Limitations
 
 1. **Extension-based filtering only.** `isPolicyLink` decides whether a link is a policy document purely from the URL's file extension, it never checks the HTTP response's `Content-Type` header or the downloaded bytes' actual file signature. A link ending in `.pdf` that actually serves an HTML error page (or vice versa) is accepted or rejected on the strength of its name alone. This is exactly the gap Task 2/3's "malformed document" scenario (T007/T008) is designed to probe.
 2. **No per-document fault isolation.** `main` calls `describeDownload` for each selected link with no `try/catch` around the loop. A timeout, a connection failure, or any `IOException` on one document propagates straight out of `main` and ends the whole run, rather than being recorded as a failure for that one document while the rest continue. There is also no retry logic to distinguish a transient 5xx from a permanent 4xx. This is the central behaviour Task 2's timeout and status-code scenarios (T003–T006) test for.
@@ -25,7 +25,7 @@
 
 These are intentional simplifications, not oversights, the brief is explicit that the prototype does not need to be robust. Tasks 2–4 reason about what a fully robust version of this same design would need to do differently.
 
-### Assumptions
+### 1.3 Assumptions
 
 - Policy documents are always linked from the same host as the index page; the prototype explicitly discards cross-host links (`sameHost`) before even checking the extension, so it would miss documents served from, say, a separate CDN or document store (see Task 4, A007).
 - A file extension is a reasonably reliable signal of document type. The team's own probe against the real site (Task 3, §3.2) found it enforces `X-Ratelimit-Limit: 3, tighter than the 20-request budget the prototype assumes it can spend, so this assumption about the service's tolerance is already known not to fully hold; the prototype was deliberately left unchanged in response to this, consistent with the brief's scope for Task 1.
@@ -37,7 +37,7 @@ These are intentional simplifications, not oversights, the brief is explicit tha
 
 For each of the five supplied scenarios, we first state what we consider a reasonable expectation for scraper behaviour, then provide a table of concrete test cases implementing those expectations.
 
-### Reasonable expectations
+### 2.1 Reasonable expectations
 
 1. **Structure changes.** If the expected HTML structure changes, the scraper should detect the absence of matching links rather than silently proceeding as though nothing were wrong. A run that discovers zero, or an implausibly small number, of policy links should be treated as a failure condition and reported clearly, rather than logged as a successful run that simply found nothing.
 2. **HTML truncated.** If the HTML returned is truncated, the parser should fail defensively rather than catastrophically. It should either recover and return whatever valid links appear before the truncation point, or raise a clearly logged parsing error, in neither case should it throw an unhandled exception or hang.
@@ -45,7 +45,7 @@ For each of the five supplied scenarios, we first state what we consider a reaso
 4. **4xx/5xx status codes.** The scraper should treat 4xx and 5xx responses as different categories of fault, consistent with the specification's own distinction between a faulty request and a faulty server. A 4xx response most likely indicates a problem with the request itself (a stale or incorrect link) and is unlikely to succeed on retry, so it should simply be recorded and skipped. A 5xx response indicates a server-side fault that may be transient, so a bounded number of retries is reasonable before the document is recorded as failed.
 5. **Malformed document.** The scraper should verify a document's actual content rather than trusting its file extension. If the declared content type or the file's signature bytes do not match what the extension promised, this should be flagged as a mismatch rather than reported as a successful download.
 
-### Test cases
+### 2.2 Test cases
 
 Most cases below arrange the environment with an HTTP stub returning a canned response, since we are testing how the scraper reacts to a given input rather than verifying specific calls were made; T001 and T002 instead use a local HTML fixture, since those scenarios concern parsing malformed content rather than a particular HTTP response. Task 3 discusses our use of fixtures and test doubles in more depth.
 
@@ -138,7 +138,7 @@ repeatedly without sending test traffic to the production-like service.
 
 To find hidden assumptions, we wrote out the happy path (fetch, parse, extract links, resolve, filter, download, check) and asked at each step what is taken for granted and what input would break it. Each idea below gives the assumption challenged, the test input or environment, and what counts as failure and how it is detected.
 
-### Adversarial test ideas
+### 4.1 Adversarial test ideas
 
 | ID   | (a) Assumption challenged | (b) Test input / environment | (c) Failure and detection |
 | ---- | ------------------------- | ----------------------------- | -------------------------- |
